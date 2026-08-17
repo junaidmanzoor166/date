@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Table for two</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..800&family=Karla:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────
+   EDIT ME: her name goes in the script at the
+   bottom (const CONFIG = { ... }).
+   ───────────────────────────────────────────── */
+
+:root{
+  --night:#1B0B2A;
+  --night-2:#3A1140;
+  --gold:#E9B949;
+  --blush:#FF8FA3;
+  --cream:#FDF0E4;
+  --muted:rgba(253,240,228,.60);
+  --line:rgba(233,185,73,.28);
+  --ease:cubic-bezier(.2,.9,.25,1);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Karla",system-ui,sans-serif;
+  color:var(--cream);
+  background:var(--night);
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  padding:24px 18px 40px;
+  overflow-x:hidden;
+  position:relative;
+}
+/* candlelight */
+body::before{
+  content:"";position:fixed;inset:-20%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(50% 40% at 50% 18%, rgba(233,185,73,.20), transparent 70%),
+    radial-gradient(60% 50% at 80% 90%, rgba(255,143,163,.16), transparent 70%),
+    linear-gradient(160deg, var(--night) 0%, var(--night-2) 55%, #150920 100%);
+  animation:flicker 6s ease-in-out infinite alternate;
+}
+@keyframes flicker{from{opacity:.92}to{opacity:1}}
+
+canvas#confetti{position:fixed;inset:0;z-index:5;pointer-events:none}
+
+main{position:relative;z-index:2;width:100%;max-width:560px}
+
+.screen{display:none;animation:rise .6s var(--ease) both}
+.screen.is-active{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.eyebrow{
+  font-family:"Space Mono",monospace;font-size:.7rem;letter-spacing:.32em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:22px;text-align:center;
+}
+.eyebrow span{opacity:.5}
+
+h1{
+  font-family:"Fraunces",serif;
+  font-optical-sizing:auto;
+  font-weight:600;
+  font-size:clamp(2.1rem,8.5vw,3.4rem);
+  line-height:1.02;
+  letter-spacing:-.02em;
+  text-align:center;
+  text-wrap:balance;
+}
+h1 em{font-style:italic;color:var(--blush);font-weight:400}
+
+.sub{
+  text-align:center;color:var(--muted);margin-top:16px;font-size:1rem;line-height:1.6;
+  text-wrap:balance;
+}
+
+/* ── buttons ───────────────────────────────── */
+.choices{
+  margin-top:44px;display:flex;gap:16px;justify-content:center;align-items:center;
+  min-height:120px;flex-wrap:wrap;
+}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+
+.btn-yes{
+  background:linear-gradient(175deg,#F6CE6E,var(--gold));
+  color:#2A1206;
+  font-family:"Fraunces",serif;font-weight:700;
+  font-size:1.15rem;padding:.8em 1.9em;border-radius:999px;
+  box-shadow:0 10px 30px -8px rgba(233,185,73,.55);
+  transition:transform .35s var(--ease),box-shadow .35s var(--ease);
+  will-change:transform;
+}
+.btn-yes:hover{transform:translateY(-2px)}
+.btn-yes:active{transform:translateY(1px)}
+
+.btn-no{
+  border:1px solid var(--line);color:var(--muted);
+  font-size:.95rem;padding:.75em 1.6em;border-radius:999px;
+  transition:transform .28s var(--ease),opacity .3s ease,scale .3s ease;
+  will-change:transform;
+  backdrop-filter:blur(2px);
+}
+.btn-no:hover{color:var(--cream)}
+.btn-no.gone{opacity:0;pointer-events:none;scale:.4}
+
+.whisper{
+  font-family:"Space Mono",monospace;font-size:.72rem;letter-spacing:.06em;
+  color:var(--muted);text-align:center;margin-top:26px;min-height:1.2em;
+}
+
+:focus-visible{outline:2px dashed var(--gold);outline-offset:4px;border-radius:4px}
+
+/* ── picker ────────────────────────────────── */
+.field{margin-top:30px}
+.label{
+  font-family:"Space Mono",monospace;font-size:.68rem;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:12px;
+}
+.label b{color:var(--muted);font-weight:400;letter-spacing:.1em;margin-left:8px}
+
+.days{
+  display:flex;gap:10px;overflow-x:auto;padding:4px 2px 14px;
+  scroll-snap-type:x mandatory;scrollbar-width:thin;
+  scrollbar-color:var(--line) transparent;
+}
+.days::-webkit-scrollbar{height:5px}
+.days::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px}
+.day{
+  flex:0 0 auto;scroll-snap-align:start;
+  width:66px;padding:12px 0 13px;text-align:center;
+  border:1px solid var(--line);border-radius:14px;
+  background:rgba(253,240,228,.03);
+  transition:all .22s var(--ease);
+}
+.day .dow{font-family:"Space Mono",monospace;font-size:.62rem;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.day .num{font-family:"Fraunces",serif;font-size:1.5rem;line-height:1.25;font-weight:600}
+.day .mon{font-size:.66rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.day:hover{border-color:var(--blush);transform:translateY(-3px)}
+.day.sel{background:var(--cream);color:#2A1206;border-color:var(--cream)}
+.day.sel .dow,.day.sel .mon{color:#7A4A2E}
+
+.input{
+  width:100%;font-family:"Karla",sans-serif;font-size:1rem;color:var(--cream);
+  background:rgba(253,240,228,.04);border:1px solid var(--line);
+  border-radius:14px;padding:.9em 1.1em;
+  transition:border-color .2s var(--ease),background .2s var(--ease);
+}
+.input::placeholder{color:rgba(253,240,228,.34)}
+.input:hover{border-color:var(--blush)}
+.input:focus{outline:none;border-color:var(--gold);background:rgba(253,240,228,.07)}
+
+.btn-lock{
+  margin-top:38px;width:100%;
+  background:linear-gradient(175deg,#F6CE6E,var(--gold));color:#2A1206;
+  font-family:"Fraunces",serif;font-weight:700;font-size:1.1rem;
+  padding:1em;border-radius:16px;
+  transition:opacity .25s ease,transform .25s var(--ease);
+}
+.btn-lock:disabled{opacity:.25;cursor:not-allowed}
+.btn-lock:not(:disabled):hover{transform:translateY(-2px)}
+
+/* ── ticket ────────────────────────────────── */
+.ticket{
+  margin-top:30px;position:relative;
+  background:var(--cream);color:#2A1206;
+  border-radius:18px;overflow:hidden;
+  box-shadow:0 30px 60px -25px rgba(0,0,0,.7);
+  animation:drop .8s var(--ease) both;
+}
+@keyframes drop{from{opacity:0;transform:translateY(-24px) rotate(-2deg)}to{opacity:1;transform:none}}
+.ticket-top{padding:26px 26px 22px;text-align:center}
+.ticket-top .kicker{
+  font-family:"Space Mono",monospace;font-size:.63rem;letter-spacing:.3em;
+  text-transform:uppercase;color:#B0763C;
+}
+.ticket-top h2{
+  font-family:"Fraunces",serif;font-size:clamp(1.7rem,6.5vw,2.3rem);
+  font-weight:700;line-height:1.05;margin-top:10px;letter-spacing:-.02em;
+}
+.ticket-top h2 em{font-style:italic;color:#C0446B}
+
+.tear{position:relative;height:22px}
+.tear::before,.tear::after{
+  content:"";position:absolute;top:0;width:22px;height:22px;border-radius:50%;
+  background:var(--night-2);
+}
+.tear::before{left:-11px}
+.tear::after{right:-11px}
+.tear hr{border:0;border-top:2px dashed rgba(42,18,6,.22);position:absolute;left:16px;right:16px;top:10px}
+
+.rows{padding:6px 26px 26px;font-family:"Space Mono",monospace}
+.row{display:flex;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px solid rgba(42,18,6,.1);font-size:.9rem}
+.row:last-child{border:0}
+.row span{color:#9A6B3E;font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;padding-top:3px}
+.row b{font-weight:700;text-align:right}
+
+.stamp{
+  position:absolute;right:14px;bottom:16px;
+  font-family:"Space Mono",monospace;font-weight:700;font-size:.66rem;letter-spacing:.18em;
+  color:#C0446B;border:2px solid #C0446B;border-radius:8px;padding:7px 10px;
+  transform:rotate(-11deg);opacity:.82;
+  animation:stamp .5s var(--ease) .7s both;
+}
+@keyframes stamp{from{opacity:0;transform:rotate(-11deg) scale(2.4)}to{opacity:.82;transform:rotate(-11deg) scale(1)}}
+
+.after{margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.ghost{
+  border:1px solid var(--line);border-radius:999px;padding:.7em 1.4em;
+  font-size:.85rem;color:var(--muted);transition:all .2s var(--ease);
+  text-decoration:none;display:inline-block;
+}
+.ghost:hover{color:var(--cream);border-color:var(--gold)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+
+<main>
+  <!-- 1 ─ the question -->
+  <section class="screen is-active" id="s-ask">
+    <p class="eyebrow">R.S.V.P. <span>— one guest</span></p>
+    <h1 id="question">Will you go on a <em>date</em> with me?</h1>
+    <p class="sub">No pressure. Well — a little pressure.</p>
+    <div class="choices">
+      <button class="btn-yes" id="yes">Yes</button>
+      <button class="btn-no" id="no">No</button>
+    </div>
+    <p class="whisper" id="whisper" aria-live="polite"></p>
+  </section>
+
+  <!-- 2 ─ pick the date -->
+  <section class="screen" id="s-pick">
+    <p class="eyebrow">Step two <span>— you choose</span></p>
+    <h1>So. <em>When</em> are you free?</h1>
+    <div class="field">
+      <p class="label">Day</p>
+      <div class="days" id="days"></div>
+    </div>
+    <div class="field">
+      <p class="label">Time</p>
+      <div class="chips" id="times"></div>
+    </div>
+    <div class="field">
+      <p class="label">Plan <b>optional</b></p>
+      <div class="chips" id="plans"></div>
+    </div>
+    <div class="field">
+      <p class="label">Where <b>optional</b></p>
+      <input class="input" id="place" type="text" maxlength="80"
+             placeholder="Your favourite spot — name or address"
+             autocomplete="off" enterkeyhint="done"
+             aria-label="Where you would like to go">
+    </div>
+    <button class="btn-lock" id="lock" disabled>Lock it in</button>
+  </section>
+
+  <!-- 3 ─ confirmed -->
+  <section class="screen" id="s-done">
+    <p class="eyebrow">Confirmed <span>— see you there</span></p>
+    <div class="ticket">
+      <div class="ticket-top">
+        <p class="kicker">Table for two</p>
+        <h2 id="done-title">It's a <em>date</em>.</h2>
+      </div>
+      <div class="tear"><hr></div>
+      <div class="rows">
+        <div class="row"><span>Guest</span><b id="r-guest">You</b></div>
+        <div class="row"><span>Day</span><b id="r-day">—</b></div>
+        <div class="row"><span>Time</span><b id="r-time">—</b></div>
+        <div class="row"><span>Plan</span><b id="r-plan">—</b></div>
+        <div class="row"><span>Place</span><b id="r-place">—</b></div>
+        <div class="row"><span>Booked by</span><b id="r-from">Me</b></div>
+      </div>
+      <p class="stamp">Confirmed</p>
+    </div>
+    <p class="sub" id="done-sub">Screenshot this. I'll be counting down.</p>
+    <div class="after">
+      <a class="ghost" id="ics" download="our-date.ics">Add to calendar</a>
+      <a class="ghost" id="map" target="_blank" rel="noopener" hidden>See it on the map</a>
+      <button class="ghost" id="again">Change the day</button>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ═══════════════════════════════════════════════
+   EDIT THESE THREE LINES AND YOU'RE DONE
+   ═══════════════════════════════════════════════ */
+const CONFIG = {
+  her:  "",            // her name, e.g. "Mia" — leave "" to skip it
+  you:  "Me",          // your name
+  notify: "junaidmanzoorzukoln166@gmail.com",  // her answer is emailed here
+  times: ["11:00", "15:00", "18:30", "20:00", "21:30"],
+  plans: ["Dinner", "Coffee", "Movie night", "Long walk", "Your call"]
+};
+/* ═══════════════════════════════════════════════ */
+
+const $ = s => document.querySelector(s);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* personalise the question */
+if (CONFIG.her) {
+  $("#question").innerHTML = CONFIG.her + ", will you go on a <em>date</em> with me?";
+  $("#r-guest").textContent = CONFIG.her;
+}
+$("#r-from").textContent = CONFIG.you;
+
+/* ── screen 1: the impossible "No" ───────────── */
+const no = $("#no"), yes = $("#yes"), whisper = $("#whisper");
+const pleas = ["No", "Are you sure?", "Really sure?", "Think again", "Last chance", "Pretty please?"];
+const asides = ["", "It moved. Weird.", "Suspicious.", "That button is broken, I checked.",
+                "You're making this hard.", "One left.", "The No button left. Only one option now."];
+let dodges = 0, scale = 1;
+let home = null;
+
+const capture = () => { no.style.transform = ""; home = no.getBoundingClientRect(); };
+addEventListener("load", capture);
+addEventListener("resize", () => { if (dodges === 0) capture(); });
+
+function dodge(e) {
+  if (e) e.preventDefault();
+  if (!home) capture();
+  dodges++;
+
+  if (dodges > 6) {
+    no.classList.add("gone");
+    whisper.textContent = asides[6];
+    return;
+  }
+
+  const pad = 14;
+  const w = home.width, h = home.height;
+  const maxX = innerWidth - w - pad, maxY = innerHeight - h - pad;
+  let x, y, tries = 0;
+  do {
+    x = pad + Math.random() * Math.max(0, maxX - pad);
+    y = pad + Math.random() * Math.max(0, maxY - pad);
+    tries++;
+  } while (tries < 12 && Math.hypot(x - home.left, y - home.top) < 140);
+
+  no.style.transform = `translate(${x - home.left}px, ${y - home.top}px) scale(${1 - dodges * 0.09})`;
+  no.textContent = pleas[Math.min(dodges, pleas.length - 1)];
+  whisper.textContent = asides[dodges];
+
+  scale = Math.min(scale + 0.16, 2.1);
+  yes.style.transform = `scale(${scale})`;
+}
+["mouseenter", "touchstart", "click", "focus"].forEach(ev => no.addEventListener(ev, dodge, { passive: false }));
+
+yes.addEventListener("click", () => { show("s-pick"); burst(26); });
+
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("is-active", s.id === id));
+  scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+}
+
+/* ── screen 2: pick a day ────────────────────── */
+const picked = { date: null, time: null, plan: null };
+const daysEl = $("#days");
+
+for (let i = 1; i <= 14; i++) {
+  const d = new Date(); d.setDate(d.getDate() + i);
+  const b = document.createElement("button");
+  b.className = "day";
+  b.innerHTML = `<div class="dow">${d.toLocaleDateString("en-GB", { weekday: "short" })}</div>
+                 <div class="num">${d.getDate()}</div>
+                 <div class="mon">${d.toLocaleDateString("en-GB", { month: "short" })}</div>`;
+  b.onclick = () => {
+    daysEl.querySelectorAll(".day").forEach(x => x.classList.remove("sel"));
+    b.classList.add("sel"); picked.date = d; check();
+  };
+  daysEl.appendChild(b);
+}
+
+function chipRow(el, items, key) {
+  items.forEach(t => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.textContent = t;
+    b.onclick = () => {
+      el.querySelectorAll(".chip").forEach(x => x.classList.remove("sel"));
+      b.classList.add("sel"); picked[key] = t; check();
+    };
+    el.appendChild(b);
+  });
+}
+chipRow($("#times"), CONFIG.times, "time");
+chipRow($("#plans"), CONFIG.plans, "plan");
+
+const lock = $("#lock");
+const check = () => lock.disabled = !(picked.date && picked.time);
+
+/* ── screen 3: the ticket ────────────────────── */
+lock.onclick = () => {
+  picked.place = $("#place").value.trim();
+  const long = picked.date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  $("#r-day").textContent = long;
+  $("#r-time").textContent = picked.time;
+  $("#r-plan").textContent = picked.plan || "To be discovered";
+  $("#r-place").textContent = picked.place || "Your call on the day";
+  if (CONFIG.her) $("#done-title").innerHTML = `It's a <em>date</em>, ${CONFIG.her}.`;
+  $("#done-sub").textContent = `${long} at ${picked.time}. Screenshot this — I'll be counting down.`;
+  buildIcs(long);
+  notify(long);
+  show("s-done");
+  burst(140);
+};
+
+/* email the answer — silent, never blocks the screen */
+function notify(long) {
+  if (!CONFIG.notify) return;
+  fetch("https://formsubmit.co/ajax/" + CONFIG.notify, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify({
+      _subject: "She said yes — " + long + " at " + picked.time,
+      _template: "table",
+      Answer: "Yes",
+      Guest: CONFIG.her || "(name not set)",
+      Day: long,
+      Time: picked.time,
+      Plan: picked.plan || "To be discovered",
+      Place: picked.place || "(she left it open)",
+      "No presses before yes": String(dodges),
+      "Answered at": new Date().toLocaleString()
+    })
+  }).catch(() => {});
+}
+
+$("#again").onclick = () => show("s-pick");
+
+function pad(n) { return String(n).padStart(2, "0"); }
+function buildIcs(long) {
+  const d = picked.date, [hh, mm] = picked.time.split(":");
+  const start = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${hh}${mm}00`;
+  const end = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad((+hh + 2) % 24)}${mm}00`;
+  const title = CONFIG.her ? `Date with ${CONFIG.you}` : "Our date";
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//date//EN", "BEGIN:VEVENT",
+    `DTSTART:${start}`, `DTEND:${end}`, `SUMMARY:${title}`,
+    `LOCATION:${picked.place || "TBC"}`,
+    `DESCRIPTION:${picked.plan || "Surprise"} — ${long}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  $("#ics").href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+}
+
+/* ── falling hearts ──────────────────────────── */
+const cv = $("#confetti"), ctx = cv.getContext("2d");
+let bits = [];
+function size() { cv.width = innerWidth; cv.height = innerHeight; }
+size(); addEventListener("resize", size);
+
+function burst(n) {
+  if (reduced) return;
+  const colors = ["#FF8FA3", "#E9B949", "#FDF0E4", "#C0446B"];
+  for (let i = 0; i < n; i++) bits.push({
+    x: Math.random() * cv.width, y: -30 - Math.random() * cv.height * .6,
+    s: 10 + Math.random() * 16, vy: 1.4 + Math.random() * 2.6,
+    vx: (Math.random() - .5) * 1.4, a: Math.random() * 6.28,
+    va: (Math.random() - .5) * .12, c: colors[i % colors.length]
+  });
+  if (bits.length === n) requestAnimationFrame(loop);
+}
+function loop() {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  bits = bits.filter(b => b.y < cv.height + 40);
+  bits.forEach(b => {
+    b.y += b.vy; b.x += b.vx; b.a += b.va;
+    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.a);
+    ctx.fillStyle = b.c; ctx.font = `${b.s}px serif`; ctx.textAlign = "center";
+    ctx.fillText("♥", 0, 0); ctx.restore();
+  });
+  if (bits.length) requestAnimationFrame(loop);
+  else ctx.clearRect(0, 0, cv.width, cv.height);
+}
+</script>
+</body>
+</html>
