@@ -144,6 +144,15 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 .day.sel{background:var(--cream);color:#2A1206;border-color:var(--cream)}
 .day.sel .dow,.day.sel .mon{color:#7A4A2E}
 
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chip{
+  border:1px solid var(--line);border-radius:999px;
+  padding:.6em 1.1em;font-size:.9rem;color:var(--muted);
+  transition:all .2s var(--ease);
+}
+.chip:hover{color:var(--cream);border-color:var(--blush)}
+.chip.sel{background:var(--blush);border-color:var(--blush);color:#3A0A16;font-weight:700}
+
 .input{
   width:100%;font-family:"Karla",sans-serif;font-size:1rem;color:var(--cream);
   background:rgba(253,240,228,.04);border:1px solid var(--line);
@@ -228,7 +237,7 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
   <!-- 1 ─ the question -->
   <section class="screen is-active" id="s-ask">
     <p class="eyebrow">R.S.V.P. <span>— one guest</span></p>
-    <h1 id="question">Will you go on a <em>date</em> with me?</h1>
+    <h1 id="question">Will you go on a <em>halal date</em> with me?</h1>
     <p class="sub">No pressure. Well — a little pressure.</p>
     <div class="choices">
       <button class="btn-yes" id="yes">Yes</button>
@@ -269,7 +278,7 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
     <div class="ticket">
       <div class="ticket-top">
         <p class="kicker">Table for two</p>
-        <h2 id="done-title">It's a <em>date</em>.</h2>
+        <h2 id="done-title">It's a <em>halal date</em>.</h2>
       </div>
       <div class="tear"><hr></div>
       <div class="rows">
@@ -296,7 +305,7 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
    EDIT THESE THREE LINES AND YOU'RE DONE
    ═══════════════════════════════════════════════ */
 const CONFIG = {
-  her:  "",            // her name, e.g. "Mia" — leave "" to skip it
+  her:  "hajrah",            // her name, e.g. "Mia" — leave "" to skip it
   you:  "Me",          // your name
   notify: "junaidmanzoorzukoln166@gmail.com",  // her answer is emailed here
   times: ["11:00", "15:00", "18:30", "20:00", "21:30"],
@@ -309,7 +318,7 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* personalise the question */
 if (CONFIG.her) {
-  $("#question").innerHTML = CONFIG.her + ", will you go on a <em>date</em> with me?";
+  $("#question").innerHTML = CONFIG.her + ", will you go on a <em>halal date</em> with me?";
   $("#r-guest").textContent = CONFIG.her;
 }
 $("#r-from").textContent = CONFIG.you;
